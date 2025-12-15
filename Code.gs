@@ -40,10 +40,11 @@ const ROLES = {
 
 // --- CORS PREFLIGHT HANDLER ---
 function doOptions(e) {
-  return ContentService.createTextOutput()
-    .addHeader('Access-Control-Allow-Origin', '*')
-    .addHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    .addHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const output = ContentService.createTextOutput();
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  output.addHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');
+  return output;
 }
 
 function doPost(e) {
