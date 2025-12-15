@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // ❗ مهم: لینک API خود را اینجا قرار دهید
-    const API_URL = "https://script.google.com/macros/s/AKfycbw64mrQrDyAJOuSIrtGhOKNLSgd-NMAXmipA3zqugI-TE_bA3qGmWjTJXe_IsUU79xgDA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFhhTg_2xf6TqTBdybO883H4f6562sTDUSY8dbQJyN2K-nmFVD7ViTgWllEPwOaf7V/exec";
 
     // --- ۱. کد نگهبان و بررسی هویت ---
     const userData = JSON.parse(localStorage.getItem('userData'));

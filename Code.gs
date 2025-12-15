@@ -5,7 +5,7 @@
 // -------------------------------------------------------------------------------------------------
 
 // --- GLOBAL CONFIGURATION ---
-const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1bEM1Eq3EpqlyiEKqWvcEDvZt4bmME-nBne0nPpO8wLY/edit?gid=0#gid=0";
+const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/19LVyD13NEmy2qVo2OH1ByuO0MuTZ3EZorQv0tBl3ajM/edit?gid=0#gid=0";
 const ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
 
 // Sheet Definitions
