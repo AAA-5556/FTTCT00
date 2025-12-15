@@ -8,8 +8,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         statusDiv.textContent = 'در حال ورود...';
         statusDiv.style.color = 'black';
 
-        // This is a direct call, not using auth.js, as we don't have a token yet.
-        const response = await fetch("https://script.google.com/macros/s/AKfycbyFhhTg_2xf6TqTBdybO883H4f6562sTDUSY8dbQJyN2K-nmFVD7ViTgWllEPwOaf7V/exec", {
+        const response = await fetch(API_URL, { // Uses the global API_URL from config.js
             method: 'POST',
             body: JSON.stringify({ action: 'login', payload: { username, password } }),
             headers: { 'Content-Type': 'application/json' }
@@ -22,7 +21,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             localStorage.setItem('userData', JSON.stringify(user));
             localStorage.setItem('sessionToken', token);
 
-            // --- CORRECT REDIRECTION LOGIC ---
             switch (user.role) {
                 case 'root_admin':
                 case 'super_admin':
