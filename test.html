@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تست اتصال</title>
+    <style>
+        body { font-family: Tahoma; padding: 20px; direction: rtl; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        #result { background: #f0f0f0; padding: 15px; margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>تست اتصال به بک‌اند</h1>
+    <button id="test-old">تست کد قدیمی</button>
+    <button id="test-new">تست کد جدید</button>
+    <div id="result">روی دکمه‌ها کلیک کنید...</div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+
+        document.getElementById('test-old').onclick = async () => {
+            resultDiv.textContent = '⏳ در حال تست کد قدیمی...';
+            try {
+                const response = await fetch("https://script.google.com/macros/s/AKfycbyFhhTg_2xf6TqTBdybO883H4f6562sTDUSY8dbQJyN2K-nmFVD7ViTgWllEPwOaf7V/exec", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'login', payload: {username: 'admin', password: '9905'}})
+                });
+                const data = await response.json();
+                resultDiv.textContent = '✅ کد قدیمی کار کرد!\n\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = '❌ کد قدیمی خطا داد:\n' + error.message;
+            }
+        };
+
+        document.getElementById('test-new').onclick = async () => {
+            resultDiv.textContent = '⏳ در حال تست کد جدید...';
+            try {
+                const response = await fetch("https://script.google.com/macros/s/AKfycbyblZJ3DnESNDpEKSHzqi6sEIGBgK4LdkIVOOxFmB6rHopQBKIHG-2920z1eLtkYw7r/exec", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'login', payload: {username: 'admin', password: '9905'}})
+                });
+                const data = await response.json();
+                resultDiv.textContent = '✅ کد جدید کار کرد!\n\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = '❌ کد جدید خطا داد:\n' + error.message;
+            }
+        };
+    </script>
+</body>
+</html>
