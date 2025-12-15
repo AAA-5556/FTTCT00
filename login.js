@@ -2,7 +2,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    const statusDiv = document.getElementById('login-status');
+    const statusDiv = document.getElementById('error-message');
 
     try {
         statusDiv.textContent = 'در حال ورود...';
