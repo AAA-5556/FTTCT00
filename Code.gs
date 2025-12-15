@@ -24,8 +24,21 @@ const ROLES = {
 };
 
 // --- CORE INFRASTRUCTURE ---
+
+// --- CORS PREFLIGHT HANDLER ---
+// Handles browser pre-flight requests to allow cross-origin API calls.
+function doOptions(e) {
+  return ContentService.createTextOutput()
+    .addHeader('Access-Control-Allow-Origin', '*')
+    .addHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    .addHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
 function doPost(e) {
   try {
+    // Set CORS header for the actual response
+    const responseHeaders = { 'Access-Control-Allow-Origin': '*' };
+
     const request = JSON.parse(e.postData.contents);
     const { action, payload, token } = request;
 
@@ -302,8 +315,16 @@ function logAction(actor, actionType, description) {
 }
 
 // --- HELPER FUNCTIONS ---
-function createSuccessResponse(data) { return ContentService.createTextOutput(JSON.stringify({ status: 'success', data })).setMimeType(ContentService.MimeType.JSON); }
-function createErrorResponse(message) { return ContentService.createTextOutput(JSON.stringify({ status: 'error', message })).setMimeType(ContentService.MimeType.JSON); }
+function createSuccessResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify({ status: 'success', data }))
+    .setMimeType(ContentService.MimeType.JSON)
+    .addHeader('Access-Control-Allow-Origin', '*');
+}
+function createErrorResponse(message) {
+  return ContentService.createTextOutput(JSON.stringify({ status: 'error', message }))
+    .setMimeType(ContentService.MimeType.JSON)
+    .addHeader('Access-Control-Allow-Origin', '*');
+}
 function getShamiTimestamp() { return new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', hour12: false }); }
 function generateToken(subjectUserId, actorUserId) {
   const token = Utilities.getUuid();
