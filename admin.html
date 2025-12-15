@@ -7,81 +7,98 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+
+    <div id="impersonation-banner" style="display: none;">
+        <p>شما در حال مشاهده پنل به عنوان یک کاربر دیگر هستید.</p>
+        <button id="end-impersonation-btn">بازگشت به پنل اصلی</button>
+    </div>
+
+    <div class="page-container">
         <header class="page-header">
-            <div class="header-title-menu">
-                <h2 id="admin-title">پنل مدیریت</h2>
-                <div class="main-menu-container">
-                    <button id="main-menu-button" class="card-menu-button">⋮</button>
-                    <div id="main-menu-dropdown" class="card-menu-dropdown">
-                        <a href="archive.html">بایگانی موسسات</a>
-                        <a href="settings.html">تنظیمات</a>
-                        <hr style="margin: 5px 0;">
-                        <a href="login-log.html">تاریخچه ورودها</a>
-                        <a href="action-log.html">تاریخچه تغییرات</a>
-                    </div>
-                </div>
+            <div class="header-content">
+                <img src="logo.png" alt="لوگو" class="logo">
+                <h1 id="admin-title">پنل مدیریت</h1>
             </div>
             <div class="header-actions">
-                <button id="logout-button">خروج</button>
+                <div class="main-menu">
+                    <button id="main-menu-button" class="btn">منو اصلی</button>
+                    <div id="main-menu-dropdown" class="dropdown-content">
+                        <a href="action-log.html">گزارش فعالیت‌ها</a>
+                        <a href="login-log.html">گزارش ورودها</a>
+                    </div>
+                </div>
+                <button id="logout-button" class="btn">خروج</button>
             </div>
         </header>
 
-        <div id="dashboard-container" class="dashboard"></div>
-        
-        <hr class="section-divider">
+        <main>
+            <!-- Tab Navigation -->
+            <div class="tab-container">
+                <button class="tab-link active" data-tab="user-management">مدیریت کاربران</button>
+                <button class="tab-link" data-tab="attendance-report">گزارش حضور و غیاب</button>
+            </div>
 
-        <h3>گزارش کامل حضور و غیاب</h3>
-        <div class="controls">
-             <div class="form-group">
-                <label for="institution-filter">فیلتر بر اساس موسسه:</label>
-                <select id="institution-filter"><option value="all">همه موسسات</option></select>
+            <!-- Tab Content -->
+            <div id="user-management" class="tab-content active">
+                <section id="user-management-section" class="card">
+                    <h2>افزودن <span id="role-to-add">کاربر</span> جدید</h2>
+                    <form id="add-user-form" class="form-container">
+                        <input type="text" id="new-username" placeholder="نام کاربری جدید" required>
+                        <input type="password" id="new-password" placeholder="رمز عبور جدید" required>
+                        <input type="hidden" id="new-user-role" value="">
+                        <button type="submit" class="btn btn-primary">ایجاد کاربر</button>
+                    </form>
+                    <div id="status-message" class="status-message" style="display: none;"></div>
+                </section>
+                <section class="card">
+                    <h2>داشبورد مدیریت</h2>
+                    <div id="dashboard-container" class="dashboard-grid">
+                        <p id="loading-message-dashboard">در حال بارگذاری...</p>
+                    </div>
+                </section>
             </div>
-            <div class="form-group">
-                <label for="start-date-filter">از تاریخ:</label>
-                <input type="text" id="start-date-filter" placeholder="مثال: ۱۴۰۴/۰۵/۰۱">
+
+            <div id="attendance-report" class="tab-content">
+                <section class="card">
+                    <h2>فیلترها و خروجی</h2>
+                    <div class="filters">
+                        <select id="institution-filter"><option value="all">همه موسسات</option></select>
+                        <input type="text" id="start-date-filter" placeholder="تاریخ شروع (مثال: 1402/01/01)">
+                        <input type="text" id="end-date-filter" placeholder="تاریخ پایان (مثال: 1402/01/31)">
+                        <div id="status-filter-buttons" class="status-filter">
+                            <button class="filter-btn active" data-status="all">همه</button>
+                            <button class="filter-btn" data-status="حاضر">حاضر</button>
+                            <button class="filter-btn" data-status="غایب">غایب</button>
+                        </div>
+                        <button id="reset-filters" class="btn">حذف فیلترها</button>
+                        <button id="export-excel" class="btn btn-primary">خروجی اکسل</button>
+                    </div>
+                </section>
+                <section class="card">
+                    <h2>نتایج گزارش</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>موسسه</th>
+                                    <th>نام عضو</th>
+                                    <th>تاریخ و زمان</th>
+                                    <th>وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-data-body">
+                                <tr><td colspan="4" id="loading-message-report">در حال بارگذاری...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-container" class="pagination"></div>
+                </section>
             </div>
-            <div class="form-group">
-                <label for="end-date-filter">تا تاریخ:</label>
-                <input type="text" id="end-date-filter" placeholder="مثال: ۱۴۰۴/۰۵/۱۰">
-            </div>
-        </div>
-        <div class="controls secondary-filters">
-            <div class="form-group status-filter"><label>فیلتر بر اساس وضعیت:</label><div><button class="filter-btn active" data-status="all">همه</button><button class="filter-btn" data-status="حاضر">فقط حاضرین</button><button class="filter-btn" data-status="غایب">فقط غایبین</button></div></div>
-            <div class="form-group"><button id="reset-filters">حذف همه فیلترها</button></div>
-            <div class="form-group"><button id="export-excel">دانلود اکسل</button></div>
-        </div>
-        <p id="loading-message">در حال بارگذاری اطلاعات...</p>
-        <div id="member-profile-view" style="display: none;"><h3 id="member-profile-name"></h3><div id="member-profile-card"></div></div>
-        <table><thead><tr><th>موسسه</th><th>نام عضو</th><th>تاریخ و زمان</th><th>وضعیت</th></tr></thead><tbody id="admin-data-body"></tbody></table>
-        <div id="pagination-container" class="pagination"></div>
+        </main>
     </div>
 
-    <div id="edit-user-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h3 id="modal-title">ویرایش اطلاعات کاربر</h3>
-            <form id="edit-user-form">
-                <input type="hidden" id="edit-user-id">
-                <div class="form-group"><label for="edit-username">نام کاربری</label><input type="text" id="edit-username" required></div>
-                <div class="form-group"><label for="edit-password">رمز عبور جدید (اختیاری)</label><input type="password" id="edit-password" placeholder="برای تغییر، رمز جدید را وارد کنید"></div>
-                <div class="modal-actions"><button type="submit" id="save-user-button">ذخیره تغییرات</button><button type="button" class="cancel-btn">انصراف</button></div>
-            </form>
-            <p id="modal-status-message" class="error-message"></p>
-        </div>
-    </div>
-    <div id="add-institution-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h3>افزودن موسسه جدید</h3>
-            <form id="add-institution-form">
-                <div class="form-group"><label for="new-inst-username">نام کاربری جدید</label><input type="text" id="new-inst-username" required></div>
-                <div class="form-group"><label for="new-inst-password">رمز عبور جدید</label><input type="text" id="new-inst-password" required></div>
-                <div class="modal-actions"><button type="submit">ایجاد موسسه</button><button type="button" class="cancel-btn">انصراف</button></div>
-            </form>
-            <p id="add-inst-status" class="error-message"></p>
-        </div>
-    </div>
-    
-    <script src="admin.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
