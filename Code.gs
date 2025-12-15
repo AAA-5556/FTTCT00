@@ -27,6 +27,7 @@ function getSheet(name) {
     return _sheetsCache[name];
 }
 
+
 // Role Constants
 const ROLES = {
   ROOT_ADMIN: 'root_admin',
@@ -120,7 +121,7 @@ function impersonateUser(session, payload) {
     const targetUser = getUserById(targetUserId);
     if (!targetUser) throw new Error("کاربری برای ورود به پنل یافت نشد.");
     if (targetUser.managerId != actor.userId) throw new Error("شما فقط به پنل کاربران زیرمجموعه مستقیم خود دسترسی دارید.");
-    const canImpersonate = 
+    const canImpersonate =
         (actor.role === ROLES.ROOT_ADMIN && targetUser.role === ROLES.SUPER_ADMIN) ||
         (actor.role === ROLES.SUPER_ADMIN && targetUser.role === ROLES.ADMIN) ||
         (actor.role === ROLES.ADMIN && targetUser.role === ROLES.INSTITUTE);
@@ -172,7 +173,7 @@ function getAdminData(actor) {
             status: row[2],
             institutionId: row[3]
         }));
-        
+
     return { records, institutionNames };
 }
 
@@ -190,7 +191,7 @@ function getMembers(user) {
 function addUser(session, payload) {
   const { actor } = session;
   const { username, password, role } = payload;
-  const canCreate = 
+  const canCreate =
     (actor.role === ROLES.ROOT_ADMIN && role === ROLES.SUPER_ADMIN) ||
     (actor.role === ROLES.SUPER_ADMIN && role === ROLES.ADMIN) ||
     (actor.role === ROLES.ADMIN && role === ROLES.INSTITUTE);
@@ -319,14 +320,16 @@ function logAction(actor, actionType, description) {
 
 // --- HELPER FUNCTIONS ---
 function createSuccessResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify({ status: 'success', data }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*');
+  const output = ContentService.createTextOutput(JSON.stringify({ status: 'success', data }));
+  output.setMimeType(ContentService.MimeType.JSON);
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  return output;
 }
 function createErrorResponse(message) {
-  return ContentService.createTextOutput(JSON.stringify({ status: 'error', message }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*');
+  const output = ContentService.createTextOutput(JSON.stringify({ status: 'error', message }));
+  output.setMimeType(ContentService.MimeType.JSON);
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  return output;
 }
 function getShamiTimestamp() { return new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', hour12: false }); }
 function generateToken(subjectUserId, actorUserId) {
