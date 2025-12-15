@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود به سیستم حضور و غیاب</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+<img src="logo.png" class="background-logo-left" alt="لوگو چپ">
+<img src="logo.png" class="background-logo-right" alt="لوگو راست">
+    <div class="login-container">
+        <h1>سامانه حضور و غیاب مراکز روزانه بهزیستی استان یزد</h1>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">نام کاربری</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">رمز عبور</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" id="login-button">ورود</button>
+            <p id="error-message" class="error-message"></p>
+        </form>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
