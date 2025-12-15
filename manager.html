@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت ارشد</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="impersonation-banner" style="display: none;">
+        <p>شما در حال مشاهده پنل به عنوان یک کاربر دیگر هستید.</p>
+        <button id="end-impersonation-btn">بازگشت به پنل اصلی</button>
+    </div>
+    <div class="page-container">
+        <header class="page-header">
+            <h1 id="manager-title">پنل مدیریت ارشد</h1>
+            <div class="header-actions">
+                <div class="main-menu">
+                    <button id="main-menu-button" class="btn">منو اصلی</button>
+                    <div id="main-menu-dropdown" class="dropdown-content">
+                        <a href="action-log.html">گزارش فعالیت‌ها</a>
+                        <a href="login-log.html">گزارش ورودها</a>
+                    </div>
+                </div>
+                <button id="logout-button" class="btn">خروج</button>
+            </div>
+        </header>
+        <main>
+            <section class="card">
+                <h2>افزودن <span id="role-to-add"></span> جدید</h2>
+                <form id="add-user-form" class="form-container">
+                    <input type="text" id="new-username" placeholder="نام کاربری جدید" required>
+                    <input type="password" id="new-password" placeholder="رمز عبور جدید" required>
+                    <input type="hidden" id="new-user-role">
+                    <button type="submit" class="btn btn-primary">ایجاد کاربر</button>
+                </form>
+                <div id="status-message" class="status-message" style="display: none;"></div>
+            </section>
+            <section class="card">
+                <h2>داشبورد مدیریت</h2>
+                <div id="dashboard-container" class="dashboard-grid">
+                    <p id="loading-message">در حال بارگذاری...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="auth.js"></script>
+    <script src="manager.js"></script>
+</body>
+</html>
