@@ -6,26 +6,14 @@
 
 // --- GLOBAL CONFIGURATION ---
 const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1oEN0HKPGNDvdSSMpQ8O7aXd9p7eQNPmZfoIlvQfSdUA/edit?";
+const ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
 
-// --- LAZY-LOADED SPREADSHEET & SHEET ACCESS ---
-let _spreadsheet = null;
-const _sheetsCache = {};
-
-function getSpreadsheet() {
-    if (!_spreadsheet) {
-        _spreadsheet = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
-    }
-    return _spreadsheet;
-}
-
-function getSheet(name) {
-    // This function ensures the spreadsheet is loaded before getting a sheet.
-    const ss = getSpreadsheet();
-    if (!_sheetsCache[name]) {
-        _sheetsCache[name] = ss.getSheetByName(name);
-    }
-    return _sheetsCache[name];
-}
+// Sheet Definitions
+const usersSheet = ss.getSheetByName("Users");
+const attendanceSheet = ss.getSheetByName("Attendance");
+const sessionsSheet = ss.getSheetByName("Sessions");
+const actionLogSheet = ss.getSheetByName("ActionLog");
+const loginLogSheet = ss.getSheetByName("LoginLog");
 
 // Role Constants
 const ROLES = {
@@ -83,15 +71,15 @@ function doPost(e) {
 
 function checkLogin(payload) {
   const { username, password } = payload;
-  const usersData = getSheet("Users").getDataRange().getValues();
+  const usersData = usersSheet.getDataRange().getValues();
   const userRow = usersData.find(row => row[0] === username && row[1] == password && row[4] === 'Active');
   if (userRow) {
     const user = parseUserRow(userRow);
     const token = generateToken(user.userId, user.userId);
-    getSheet("LoginLog").appendRow([getShamiTimestamp(), user.username, user.role, 'ورود موفق']);
+    loginLogSheet.appendRow([getShamiTimestamp(), user.username, user.role, 'ورود موفق']);
     return { token, user };
   } else {
-    getSheet("LoginLog").appendRow([getShamiTimestamp(), username, 'N/A', 'ورود ناموفق']);
+    loginLogSheet.appendRow([getShamiTimestamp(), username, 'N/A', 'ورود ناموفق']);
     // --- THIS IS THE TEST CHANGE ---
     throw new Error("خطای آزمایشی نسخه جدید: نام کاربری یا رمز عبور صحیح نیست.");
   }
@@ -99,7 +87,7 @@ function checkLogin(payload) {
 
 function validateToken(token) {
   if (!token) throw new Error("دسترسی غیرمجاز: توکن وجود ندارد.");
-  const sessionsData = getSheet("Sessions").getDataRange().getValues();
+  const sessionsData = sessionsSheet.getDataRange().getValues();
   const sessionRow = sessionsData.find(row => row[0] === token);
   if (!sessionRow) throw new Error("دسترسی غیرمجاز: توکن نامعتبر است.");
   const expiry = new Date(sessionRow[1]).getTime();
@@ -133,7 +121,7 @@ function impersonateUser(session, payload) {
 // --- DATA FETCHING & BUSINESS LOGIC ---
 
 function getDashboardData(user) {
-  const allUsers = getSheet("Users").getDataRange().getValues();
+  const allUsers = usersSheet.getDataRange().getValues();
   const childRole = {
     [ROLES.ROOT_ADMIN]: ROLES.SUPER_ADMIN,
     [ROLES.SUPER_ADMIN]: ROLES.ADMIN,
@@ -145,7 +133,7 @@ function getDashboardData(user) {
     const sub = parseUserRow(subRow);
     let stats = {};
     if (sub.role === ROLES.INSTITUTE) {
-      const memberSheet = getSpreadsheet().getSheetByName(`Members_${sub.userId}`);
+      const memberSheet = ss.getSheetByName(`Members_${sub.userId}`);
       stats.memberCount = memberSheet ? memberSheet.getDataRange().getValues().slice(1).filter(r => r[3] === true).length : 0;
     } else {
       stats.managedUsers = allUsers.filter(row => row[5] == sub.userId && row[4] === 'Active').length;
@@ -163,7 +151,7 @@ function getAdminData(actor) {
     const institutionNames = {};
     institutions.forEach(inst => institutionNames[inst.userId] = inst.username);
 
-    const attendanceData = getSheet("Attendance").getDataRange().getValues().slice(1);
+    const attendanceData = attendanceSheet.getDataRange().getValues().slice(1);
     const records = attendanceData
         .filter(row => institutionNames[row[3]])
         .map(row => ({
@@ -178,7 +166,7 @@ function getAdminData(actor) {
 
 function getMembers(user) {
     if (user.role !== ROLES.INSTITUTE) return [];
-    const memberSheet = getSpreadsheet().getSheetByName(`Members_${user.userId}`);
+    const memberSheet = ss.getSheetByName(`Members_${user.userId}`);
     if (!memberSheet) return [];
     return memberSheet.getDataRange().getValues().slice(1)
         .filter(row => row[3] === true)
@@ -195,12 +183,12 @@ function addUser(session, payload) {
     (actor.role === ROLES.SUPER_ADMIN && role === ROLES.ADMIN) ||
     (actor.role === ROLES.ADMIN && role === ROLES.INSTITUTE);
   if (!canCreate) throw new Error(`شما اجازه ساخت کاربر با نقش "${role}" را ندارید.`);
-  const usersData = getSheet("Users").getDataRange().getValues();
+  const usersData = usersSheet.getDataRange().getValues();
   if (usersData.some(row => row[0] === username)) throw new Error("این نام کاربری قبلاً استفاده شده است.");
   const newId = (Math.max(0, ...usersData.slice(1).map(row => parseInt(row[3]) || 0))) + 1;
-  getSheet("Users").appendRow([username, password, role, newId, 'Active', actor.userId, getShamiTimestamp(), actor.username]);
+  usersSheet.appendRow([username, password, role, newId, 'Active', actor.userId, getShamiTimestamp(), actor.username]);
   if (role === ROLES.INSTITUTE) {
-    const newSheet = getSpreadsheet().insertSheet(`Members_${newId}`);
+    const newSheet = ss.insertSheet(`Members_${newId}`);
     newSheet.getRange('A1:F1').setValues([['MemberID', 'FullName', 'CreationDate', 'IsActive', 'NationalID', 'Mobile']]);
   }
   logAction(actor, `افزودن کاربر (${role})`, `کاربر جدید "${username}" (ID: ${newId}) ایجاد شد.`);
@@ -213,10 +201,10 @@ function archiveUser(session, payload) {
     const userToArchive = getUserById(userIdToArchive);
     if (!userToArchive) throw new Error("کاربر مورد نظر برای آرشیو یافت نشد.");
     if (userToArchive.managerId != actor.userId) throw new Error("شما فقط می‌توانید کاربران زیرمجموعه خود را آرشیو کنید.");
-    const usersData = getSheet("Users").getDataRange().getValues();
+    const usersData = usersSheet.getDataRange().getValues();
     const rowIndex = usersData.findIndex(row => row[3] == userIdToArchive) + 1;
     if (rowIndex > 0) {
-        getSheet("Users").getRange(rowIndex, 5).setValue('Archived');
+        usersSheet.getRange(rowIndex, 5).setValue('Archived');
         logAction(actor, 'آرشیو کاربر', `کاربر "${userToArchive.username}" (ID: ${userIdToArchive}) آرشیو شد.`);
         return { message: "کاربر با موفقیت آرشیو شد." };
     }
@@ -229,11 +217,11 @@ function updateUserCredentials(session, payload) {
     const userToUpdate = getUserById(userIdToUpdate);
     if (!userToUpdate) throw new Error("کاربر مورد نظر یافت نشد.");
     if (userToUpdate.managerId != actor.userId) throw new Error("شما اجازه ویرایش اطلاعات این کاربر را ندارید.");
-    const usersData = getSheet("Users").getDataRange().getValues();
+    const usersData = usersSheet.getDataRange().getValues();
     const rowIndex = usersData.findIndex(row => row[3] == userIdToUpdate) + 1;
     if (rowIndex > 0) {
-        if (newUsername) getSheet("Users").getRange(rowIndex, 1).setValue(newUsername);
-        if (newPassword) getSheet("Users").getRange(rowIndex, 2).setValue(newPassword);
+        if (newUsername) usersSheet.getRange(rowIndex, 1).setValue(newUsername);
+        if (newPassword) usersSheet.getRange(rowIndex, 2).setValue(newPassword);
         logAction(actor, 'ویرایش اطلاعات کاربر', `اطلاعات کاربر "${userToUpdate.username}" (ID: ${userIdToUpdate}) ویرایش شد.`);
         return { message: "اطلاعات با موفقیت به‌روزرسانی شد." };
     }
@@ -246,7 +234,7 @@ function addMembersBatch(session, payload) {
   const { namesString } = payload;
   const names = namesString.split('\n').map(name => name.trim()).filter(Boolean);
   if (names.length === 0) throw new Error("لیست نام‌ها خالی است.");
-  const memberSheet = getSpreadsheet().getSheetByName(`Members_${subject.userId}`);
+  const memberSheet = ss.getSheetByName(`Members_${subject.userId}`);
   if (!memberSheet) throw new Error("شیت اعضای این موسسه یافت نشد.");
   const data = memberSheet.getDataRange().getValues();
   let lastId = Math.max(subject.userId * 1000, ...data.slice(1).map(row => parseInt(row[0]) || 0));
@@ -267,7 +255,7 @@ function saveAttendance(session, payload) {
   if (subject.role !== ROLES.INSTITUTE) throw new Error("ثبت حضور و غیاب فقط برای موسسات امکان‌پذیر است.");
   const institutionId = subject.userId;
   const todayDate = getShamiTimestamp().split('،')[0];
-  const allSheetData = getSheet("Attendance").getDataRange().getValues();
+  const allSheetData = attendanceSheet.getDataRange().getValues();
   const rowsToDelete = [];
   allSheetData.forEach((row, index) => {
     if (row[0].startsWith(todayDate) && row[3] == institutionId) {
@@ -275,12 +263,12 @@ function saveAttendance(session, payload) {
     }
   });
   for (let i = rowsToDelete.length - 1; i >= 0; i--) {
-    getSheet("Attendance").deleteRow(rowsToDelete[i]);
+    attendanceSheet.deleteRow(rowsToDelete[i]);
   }
   const timestamp = getShamiTimestamp();
   const newRecords = payload.data.map(record => [timestamp, record.memberId, record.status, institutionId]);
   if (newRecords.length > 0) {
-    getSheet("Attendance").getRange(getSheet("Attendance").getLastRow() + 1, 1, newRecords.length, 4).setValues(newRecords);
+    attendanceSheet.getRange(attendanceSheet.getLastRow() + 1, 1, newRecords.length, 4).setValues(newRecords);
   }
   logAction(actor, 'ثبت حضور و غیاب', `حضور و غیاب برای ${newRecords.length} نفر در موسسه "${subject.username}" ثبت شد.`);
   return { message: "اطلاعات با موفقیت به‌روزرسانی شد." };
@@ -290,7 +278,7 @@ function saveAttendance(session, payload) {
 
 function getActionLog(actor) {
   if (actor.role === ROLES.INSTITUTE) throw new Error("شما دسترسی به این بخش را ندارید.");
-  const allLogs = getSheet("ActionLog").getDataRange().getValues().slice(1).map(parseLogRow);
+  const allLogs = actionLogSheet.getDataRange().getValues().slice(1).map(parseLogRow);
   if (actor.role === ROLES.ROOT_ADMIN) return allLogs.reverse();
   const subordinateIds = getAllSubordinateIds(actor.userId);
   const visibleUsernames = new Set(Object.values(getAllUsers()).filter(u => subordinateIds.has(u.userId)).map(u => u.username));
@@ -301,7 +289,7 @@ function getActionLog(actor) {
 
 function getLoginLog(actor) {
   if (actor.role === ROLES.INSTITUTE) throw new Error("شما دسترسی به این بخش را ندارید.");
-  const allLogs = getSheet("LoginLog").getDataRange().getValues().slice(1).map(row => ({timestamp: row[0], username: row[1], role: row[2]}));
+  const allLogs = loginLogSheet.getDataRange().getValues().slice(1).map(row => ({timestamp: row[0], username: row[1], role: row[2]}));
   if (actor.role === ROLES.ROOT_ADMIN) return allLogs.reverse();
   const subordinateIds = getAllSubordinateIds(actor.userId);
   const visibleUsernames = new Set(Object.values(getAllUsers()).filter(u => subordinateIds.has(u.userId)).map(u => u.username));
@@ -314,38 +302,40 @@ function logAction(actor, actionType, description) {
   const actorDisplay = actor.isImpersonating
     ? `${actor.username} (به عنوان ${actor.subject.username})`
     : actor.username;
-  getSheet("ActionLog").appendRow([getShamiTimestamp(), actorDisplay, actor.role, actionType, description]);
+  actionLogSheet.appendRow([getShamiTimestamp(), actorDisplay, actor.role, actionType, description]);
 }
 
 // --- HELPER FUNCTIONS ---
 function createSuccessResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify({ status: 'success', data }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*');
+  const output = ContentService.createTextOutput(JSON.stringify({ status: 'success', data }));
+  output.setMimeType(ContentService.MimeType.JSON);
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  return output;
 }
 function createErrorResponse(message) {
-  return ContentService.createTextOutput(JSON.stringify({ status: 'error', message }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*');
+  const output = ContentService.createTextOutput(JSON.stringify({ status: 'error', message }));
+  output.setMimeType(ContentService.MimeType.JSON);
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  return output;
 }
 function getShamiTimestamp() { return new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', hour12: false }); }
 function generateToken(subjectUserId, actorUserId) {
   const token = Utilities.getUuid();
   const expiry = new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
-  getSheet("Sessions").appendRow([token, expiry, subjectUserId, actorUserId]);
+  sessionsSheet.appendRow([token, expiry, subjectUserId, actorUserId]);
   return token;
 }
 function parseUserRow(row) { return { username: row[0], role: row[2], userId: row[3], managerId: row[5] }; }
 function getUserById(userId) {
   if (userId === null || userId === undefined) return null;
-  const userRow = getSheet("Users").getDataRange().getValues().find(row => row[3] == userId);
+  const userRow = usersSheet.getDataRange().getValues().find(row => row[3] == userId);
   return userRow ? parseUserRow(userRow) : null;
 }
 let allUsersCache = null;
 function getAllUsers() {
   if (allUsersCache) return allUsersCache;
   allUsersCache = {};
-  getSheet("Users").getDataRange().getValues().slice(1).forEach(row => {
+  usersSheet.getDataRange().getValues().slice(1).forEach(row => {
     const user = parseUserRow(row);
     allUsersCache[user.userId] = user;
   });
