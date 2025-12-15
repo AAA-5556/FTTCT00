@@ -1,11 +1,11 @@
 // -------------------------------------------------------------------------------------------------
 // --- AGMOSS - ATTENDANCE & GOVERNANCE MANAGEMENT & OVERSIGHT SOFTWARE SUITE ---
 // --- BACKEND LOGIC (GOOGLE APPS SCRIPT) ---
-// --- REVISION 3.0 - FEATURE RESTORATION & LOGGING FIX ---
+// --- REVISION 3.2 - DEPLOYMENT TEST VERSION ---
 // -------------------------------------------------------------------------------------------------
 
 // --- GLOBAL CONFIGURATION ---
-const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/19LVyD13NEmy2qVo2OH1ByuO0MuTZ3EZorQv0tBl3ajM/edit?gid=0#gid=0";
+const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1oEN0HKPGNDvdSSMpQ8O7aXd9p7eQNPmZfoIlvQfSdUA/edit?";
 const ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
 
 // Sheet Definitions
@@ -26,7 +26,6 @@ const ROLES = {
 // --- CORE INFRASTRUCTURE ---
 
 // --- CORS PREFLIGHT HANDLER ---
-// Handles browser pre-flight requests to allow cross-origin API calls.
 function doOptions(e) {
   return ContentService.createTextOutput()
     .addHeader('Access-Control-Allow-Origin', '*')
@@ -36,9 +35,6 @@ function doOptions(e) {
 
 function doPost(e) {
   try {
-    // Set CORS header for the actual response
-    const responseHeaders = { 'Access-Control-Allow-Origin': '*' };
-
     const request = JSON.parse(e.postData.contents);
     const { action, payload, token } = request;
 
@@ -51,23 +47,17 @@ function doPost(e) {
 
     let result;
     switch (action) {
-      // Hierarchy-based actions
       case 'getDashboardData': result = getDashboardData(subject); break;
       case 'addUser': result = addUser(session, payload); break;
       case 'archiveUser': result = archiveUser(session, payload); break;
       case 'updateUserCredentials': result = updateUserCredentials(session, payload); break;
       case 'impersonateUser': return createSuccessResponse(impersonateUser(session, payload));
-
-      // Preserved Legacy Actions
       case 'getAdminData': result = getAdminData(actor); break;
       case 'getMembers': result = getMembers(subject); break;
       case 'addMembersBatch': result = addMembersBatch(session, payload); break;
       case 'saveAttendance': result = saveAttendance(session, payload); break;
-
-      // Logging Actions
       case 'getActionLog': result = getActionLog(actor); break;
       case 'getLoginLog': result = getLoginLog(actor); break;
-
       default: throw new Error(`Action not supported: ${action}`);
     }
     return createSuccessResponse(result);
@@ -90,7 +80,8 @@ function checkLogin(payload) {
     return { token, user };
   } else {
     loginLogSheet.appendRow([getShamiTimestamp(), username, 'N/A', 'ورود ناموفق']);
-    throw new Error("نام کاربری یا رمز عبور اشتباه است یا حساب شما غیرفعال شده است.");
+    // --- THIS IS THE TEST CHANGE ---
+    throw new Error("خطای آزمایشی نسخه جدید: نام کاربری یا رمز عبور صحیح نیست.");
   }
 }
 
@@ -117,7 +108,7 @@ function impersonateUser(session, payload) {
     const targetUser = getUserById(targetUserId);
     if (!targetUser) throw new Error("کاربری برای ورود به پنل یافت نشد.");
     if (targetUser.managerId != actor.userId) throw new Error("شما فقط به پنل کاربران زیرمجموعه مستقیم خود دسترسی دارید.");
-    const canImpersonate =
+    const canImpersonate = 
         (actor.role === ROLES.ROOT_ADMIN && targetUser.role === ROLES.SUPER_ADMIN) ||
         (actor.role === ROLES.SUPER_ADMIN && targetUser.role === ROLES.ADMIN) ||
         (actor.role === ROLES.ADMIN && targetUser.role === ROLES.INSTITUTE);
@@ -162,14 +153,14 @@ function getAdminData(actor) {
 
     const attendanceData = attendanceSheet.getDataRange().getValues().slice(1);
     const records = attendanceData
-        .filter(row => institutionNames[row[3]]) // Filter records for visible institutions
+        .filter(row => institutionNames[row[3]])
         .map(row => ({
             date: row[0],
             memberId: row[1],
             status: row[2],
             institutionId: row[3]
         }));
-
+        
     return { records, institutionNames };
 }
 
@@ -187,7 +178,7 @@ function getMembers(user) {
 function addUser(session, payload) {
   const { actor } = session;
   const { username, password, role } = payload;
-  const canCreate =
+  const canCreate = 
     (actor.role === ROLES.ROOT_ADMIN && role === ROLES.SUPER_ADMIN) ||
     (actor.role === ROLES.SUPER_ADMIN && role === ROLES.ADMIN) ||
     (actor.role === ROLES.ADMIN && role === ROLES.INSTITUTE);
@@ -308,7 +299,7 @@ function getLoginLog(actor) {
 }
 
 function logAction(actor, actionType, description) {
-  const actorDisplay = actor.isImpersonating
+  const actorDisplay = actor.isImpersonating 
     ? `${actor.username} (به عنوان ${actor.subject.username})`
     : actor.username;
   actionLogSheet.appendRow([getShamiTimestamp(), actorDisplay, actor.role, actionType, description]);
