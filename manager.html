@@ -26,7 +26,7 @@
             </div>
         </header>
         <main>
-            <section class="card">
+            <section id="add-user-section" class="card" style="display: none;">
                 <h2>افزودن <span id="role-to-add"></span> جدید</h2>
                 <form id="add-user-form" class="form-container">
                     <input type="text" id="new-username" placeholder="نام کاربری جدید" required>
@@ -38,7 +38,7 @@
             </section>
             <section class="card">
                 <h2>داشبورد مدیریت</h2>
-                <div id="dashboard-container" class="dashboard-grid">
+                <div id="dashboard-container">
                     <p id="loading-message">در حال بارگذاری...</p>
                 </div>
             </section>
