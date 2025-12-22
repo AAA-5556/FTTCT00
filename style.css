@@ -592,3 +592,60 @@ th {
     justify-content: center;
     align-items: center;
 }
+
+/* Styles for the Manager Dashboard */
+#dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashboard-button {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 1rem;
+    align-self: flex-start; /* Aligns button to the start of the container */
+}
+
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.user-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.user-card h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    color: #333;
+    border-bottom: none;
+    text-align: right;
+}
+
+.user-card p {
+    margin: 0 0 16px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.user-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.user-card-actions .btn {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9rem;
+}
