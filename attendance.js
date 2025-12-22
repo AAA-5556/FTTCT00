@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const response = await fetch(API_URL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify({ action, payload, token })
             });
             const result = await response.json();
