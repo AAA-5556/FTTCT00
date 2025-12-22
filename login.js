@@ -11,7 +11,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         const response = await fetch(API_URL, { // Uses the global API_URL from config.js
             method: 'POST',
             body: JSON.stringify({ action: 'login', payload: { username, password } }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'text/plain' }
         });
 
         const result = await response.json();
